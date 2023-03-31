@@ -5,19 +5,21 @@ on:
     branches: [main]
   release:
     types: [created] # 表示在创建新的 Release 时触发
+  #watch:
+  #  types: [started] # 点赞触发
 
 jobs:
   build_docker:
     name: Build docker
     runs-on: ubuntu-latest
+    #if: github.event.repository.owner.id == github.event.sender.id
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - run: |
-          echo "本次构建的版本为：${GITHUB_REF_NAME} (但是这个变量目前上下文中无法获取到)"
-          echo 本次构建的版本为：${{ github.ref_name }}
-          env
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=today::$(date +'%Y-%m-%d_%H-%M')"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -37,5 +39,5 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64,linux/arm64
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/chatgpt-web:${{ github.ref_name }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/chatgpt-web:${{ steps.date.outputs.today }}
             ${{ secrets.DOCKERHUB_USERNAME }}/chatgpt-web:latest
